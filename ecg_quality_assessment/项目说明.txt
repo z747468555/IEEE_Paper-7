@@ -1,0 +1,372 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    ECG信号质量评估系统 - 项目概览                          ║
+║                 基于CNN和导数ECG信号的自动质量评估                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📌 项目目标
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+复现论文《Automatic ECG signal quality assessment using convolutional neural 
+networks and derivative ECG signal for false alarm reduction in wearable vital 
+signs monitoring devices》的实验，实现一个完整的ECG信号质量评估系统。
+
+
+📁 项目结构
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ecg_quality_assessment/
+│
+├── 📝 配置与文档
+│   ├── config.py                   # 核心配置文件（所有参数在这里）
+│   ├── requirements.txt            # Python依赖包列表
+│   ├── README.md                   # 完整项目说明（英文）
+│   ├── 快速入门指南.md            # 中文快速上手指南
+│   └── 项目说明.txt               # 本文件
+│
+├── 🔧 核心脚本
+│   ├── main.py                     # 主程序入口（命令行界面）
+│   ├── download_datasets.py        # 数据集自动下载工具
+│   ├── prepare_data.py             # 数据预处理和准备
+│   ├── train.py                    # 模型训练脚本
+│   └── evaluate.py                 # 模型评估脚本
+│
+├── 🛠️ 工具模块 (utils/)
+│   ├── __init__.py
+│   ├── signal_processing.py        # 信号处理工具
+│   │   ├── 重采样
+│   │   ├── 带通滤波（切比雪夫滤波器）
+│   │   ├── 归一化
+│   │   ├── 导数计算
+│   │   └── 信号分割
+│   │
+│   ├── data_loader.py              # 数据加载器
+│   │   ├── MIT-BIH加载器
+│   │   ├── PTB加载器
+│   │   ├── INCART加载器
+│   │   ├── PCCC2011加载器
+│   │   └── NSTDB噪声加载器
+│   │
+│   └── noise_generator.py          # 噪声生成器
+│       ├── 含噪信号生成
+│       └── 数据增强
+│
+├── 🧠 模型模块 (model/)
+│   ├── __init__.py
+│   └── cnn_model.py                # CNN模型定义
+│       ├── 4层卷积 + 池化
+│       ├── Dropout正则化
+│       ├── 全连接层
+│       └── 训练回调函数
+│
+└── 📊 数据与结果
+    ├── data/                       # 原始数据（需下载）
+    ├── processed_data/             # 预处理后的数据
+    ├── models/                     # 训练好的模型
+    ├── results/                    # 评估结果和图表
+    └── logs/                       # 训练日志
+
+
+🚀 完整工作流程（5步）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─ 步骤1：安装环境 ────────────────────────────────────────────────┐
+│                                                                    │
+│  cd ecg_quality_assessment                                         │
+│  pip install -r requirements.txt                                   │
+│                                                                    │
+│  安装内容：                                                        │
+│  ✓ TensorFlow (深度学习)                                          │
+│  ✓ WFDB (PhysioNet数据访问)                                       │
+│  ✓ SciPy (信号处理)                                               │
+│  ✓ NumPy, Pandas (数据处理)                                       │
+│  ✓ Matplotlib (可视化)                                            │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+┌─ 步骤2：下载数据集 ──────────────────────────────────────────────┐
+│                                                                    │
+│  # 快速模式（约10-15分钟，2-3GB）                                 │
+│  python download_datasets.py --mode essential                      │
+│                                                                    │
+│  # 完整模式（约30-60分钟，8-10GB）                                │
+│  python download_datasets.py --mode all                            │
+│                                                                    │
+│  下载数据库：                                                      │
+│  ✓ MIT-BIH (训练)                                                 │
+│  ✓ PTB (训练)                                                     │
+│  ✓ NSTDB (噪声源)                                                 │
+│  ✓ INCART (测试)                                                  │
+│  ✓ PCCC2011 (测试)                                                │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+┌─ 步骤3：准备数据 ────────────────────────────────────────────────┐
+│                                                                    │
+│  python prepare_data.py                                            │
+│                                                                    │
+│  处理流程：                                                        │
+│  1. 加载原始ECG信号                                               │
+│  2. 重采样到360Hz                                                 │
+│  3. 带通滤波（0.8-40Hz）                                          │
+│  4. 归一化到[-1, 1]                                               │
+│  5. 分割为5秒片段                                                 │
+│  6. 生成含噪信号                                                  │
+│  7. 数据增强                                                      │
+│  8. 保存处理后的数据                                              │
+│                                                                    │
+│  输出：processed_data/*.npz                                        │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+┌─ 步骤4：训练模型 ────────────────────────────────────────────────┐
+│                                                                    │
+│  python train.py                                                   │
+│                                                                    │
+│  训练配置：                                                        │
+│  • 批大小：10                                                     │
+│  • 训练轮数：100                                                  │
+│  • 学习率：0.001                                                  │
+│  • 优化器：Adam                                                   │
+│  • 损失函数：二元交叉熵                                           │
+│                                                                    │
+│  训练时间：                                                        │
+│  • GPU (RTX 3080): ~30-45分钟                                     │
+│  • CPU: ~3-5小时                                                  │
+│                                                                    │
+│  输出：models/ecg_quality_model_*.h5                               │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+┌─ 步骤5：评估模型 ────────────────────────────────────────────────┐
+│                                                                    │
+│  python evaluate.py \                                              │
+│      --model models/ecg_quality_model_*.h5 \                       │
+│      --test_data processed_data/test_data.npz \                    │
+│      --dataset_name "测试集"                                       │
+│                                                                    │
+│  评估指标：                                                        │
+│  ✓ 准确率 (Accuracy)                                              │
+│  ✓ 敏感度 (Sensitivity) - 检测含噪能力                           │
+│  ✓ 特异度 (Specificity) - 检测干净能力                           │
+│  ✓ 精确率 (Precision)                                             │
+│  ✓ F1分数                                                         │
+│                                                                    │
+│  输出：results/evaluation_*/*.png, *.txt                           │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+
+🎯 预期实验结果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─ PhysioNet Challenge 2011 ───────────────────────────────────────┐
+│                                                                    │
+│  准确率 (Accuracy):    ≈ 97.59%                                   │
+│  敏感度 (Sensitivity): ≈ 98.78%                                   │
+│  特异度 (Specificity): ≈ 89.23%                                   │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+┌─ INCART Database ────────────────────────────────────────────────┐
+│                                                                    │
+│  敏感度 (Sensitivity): ≈ 100%                                     │
+│  特异度 (Specificity): ≈ 88.66%                                   │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+
+🧠 模型架构详解
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+输入层：
+  └─ dECG信号 (1799, 1)
+
+卷积块 1：
+  ├─ Conv1D (8滤波器, 6×1核)
+  ├─ ELU激活
+  ├─ MaxPooling (3×1, stride=2)
+  └─ Dropout (0.3)
+
+卷积块 2：
+  ├─ Conv1D (16滤波器, 6×1核)
+  ├─ ELU激活
+  ├─ MaxPooling (3×1, stride=2)
+  └─ Dropout (0.3)
+
+卷积块 3：
+  ├─ Conv1D (32滤波器, 6×1核)
+  ├─ ELU激活
+  ├─ MaxPooling (3×1, stride=2)
+  └─ Dropout (0.3)
+
+卷积块 4：
+  ├─ Conv1D (64滤波器, 6×1核)
+  ├─ ELU激活
+  ├─ MaxPooling (3×1, stride=2)
+  └─ Dropout (0.3)
+
+全连接层：
+  ├─ Flatten
+  ├─ Dense (32) + ELU + Dropout
+  ├─ Dense (16) + ELU + Dropout
+  ├─ Dense (8) + ELU + Dropout
+  └─ Dense (1) + Sigmoid
+
+输出：
+  └─ 质量预测 (0=干净, 1=含噪)
+
+模型大小：~2,989 KB
+参数数量：~30,000
+
+
+🔍 关键技术点
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 导数特征 (dECG)
+   ─────────────────
+   • 增强信号变化特征
+   • 减少基线漂移影响
+   • 公式: d[n] = y[n+1] - y[n]
+
+2. 双向滤波
+   ─────────────────
+   • 高通：0.8Hz切比雪夫滤波器（去基线漂移）
+   • 低通：40Hz切比雪夫滤波器（去高频噪声）
+   • 零相位失真
+
+3. 噪声生成
+   ─────────────────
+   • 3种噪声：基线漂移、肌电干扰、电极移动
+   • 3种衰减因子：0.3, 0.6, 0.9
+   • 公式: NECG = 干净信号 + a × 噪声
+
+4. 数据增强
+   ─────────────────
+   • 微小随机噪声：衰减因子0.001-0.004
+   • 增加训练样本多样性
+
+5. 轻量级架构
+   ─────────────────
+   • 仅~30k参数
+   • 适合嵌入式部署
+   • 快速推理
+
+
+📖 使用示例
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【命令行使用】
+
+# 查看帮助
+python main.py --help
+
+# 查看完整流程
+python main.py --pipeline
+
+# 运行演示
+python main.py --demo --model models/ecg_quality_model_*.h5
+
+# 评估ECG文件
+python main.py --assess \
+    --model models/ecg_quality_model_*.h5 \
+    --input data/mitdb/100 \
+    --format wfdb
+
+
+【Python代码使用】
+
+from main import ECGQualityAssessment
+import numpy as np
+
+# 初始化系统
+model_path = 'models/ecg_quality_model_20260103.h5'
+system = ECGQualityAssessment(model_path)
+
+# 评估信号
+ecg_signal = np.loadtxt('signal.txt')
+quality, confidence = system.assess_signal(ecg_signal, 360)
+print(f"质量: {quality}, 置信度: {confidence:.2%}")
+
+
+⚙️ 配置参数
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+所有参数都在 config.py 中定义，主要包括：
+
+数据参数：
+  • TARGET_SAMPLING_RATE = 360        # 目标采样率
+  • SEGMENT_DURATION = 5              # 片段长度（秒）
+
+滤波器参数：
+  • HIGHPASS_CUTOFF = 0.8             # 高通截止频率
+  • LOWPASS_CUTOFF = 40               # 低通截止频率
+
+模型参数：
+  • conv_filters = [8, 16, 32, 64]    # 卷积滤波器
+  • kernel_size = 6                   # 卷积核大小
+  • dropout_rate = 0.3                # Dropout率
+
+训练参数：
+  • batch_size = 10                   # 批大小
+  • epochs = 100                      # 训练轮数
+  • learning_rate = 0.001             # 学习率
+
+
+❓ 常见问题
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q: 数据下载失败？
+A: 尝试手动从PhysioNet下载或使用VPN
+
+Q: 内存不足？
+A: 减少max_segments或关闭数据增强
+
+Q: 训练太慢？
+A: 使用GPU或减少训练轮数
+
+Q: 结果与论文不符？
+A: 正常现象，可能因数据划分、随机初始化等因素
+
+Q: 如何调整参数？
+A: 编辑config.py文件
+
+
+📚 参考资料
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+论文：
+  Mondal, S., et al. (2025). "Automatic ECG signal quality assessment 
+  using convolutional neural networks and derivative ECG signal for false 
+  alarm reduction in wearable vital signs monitoring devices."
+
+数据库：
+  • PhysioNet: https://physionet.org/
+  • MIT-BIH: https://physionet.org/content/mitdb/
+  • PTB: https://physionet.org/content/ptbdb/
+
+技术文档：
+  • TensorFlow: https://www.tensorflow.org/
+  • WFDB: https://wfdb.readthedocs.io/
+
+
+💡 提示与建议
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ 首次运行建议使用快速测试模式
+✓ 训练前检查GPU是否可用
+✓ 保存中间结果避免重复计算
+✓ 记录实验参数便于复现
+✓ 定期备份模型和结果
+✓ 阅读快速入门指南.md获取详细说明
+
+
+📧 获取帮助
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+如有问题：
+1. 查阅 README.md 和 快速入门指南.md
+2. 检查代码注释
+3. 提交Issue
+
+════════════════════════════════════════════════════════════════════════════
+
+祝您实验顺利！🎉
+

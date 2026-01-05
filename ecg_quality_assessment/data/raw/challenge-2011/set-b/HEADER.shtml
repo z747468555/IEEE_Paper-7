@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>Challenge 2011 Test Set B</title>
+</head>
+<body bgcolor="white">
+<!--#include virtual="/links-physiobank.html" -->
+
+</td>
+<td>
+<center><h1>Challenge 2011 Test Set B</h1></center>
+
+<p>
+This is a collection of 500 twelve-lead ECGs, each 10 seconds long, to be used
+as a <em>test set</em> for events 1 and 2 of
+the <a href=/challenge/2011/>PhysioNet/Computers
+in Cardiology Challenge 2011</a>.  These challenge events entail determining
+which of the records in this test set are acceptable for
+interpretation, and which are not.
+
+<p>
+<b>File formats:</b> The records are provided in both CSV format (<tt>.txt</tt>
+files) and standard PhysioBank format (<tt>.hea</tt> and <tt>.dat</tt> files).
+The <tt>.hea</tt> files are short text files that specify the format of the
+binary <tt>.dat</tt> signal files.  The formats are those used elsewhere on
+PhysioNet; see the <a href="/faq.shtml#signals">FAQ</a> for details.  Note that
+the last line of each <tt>.hea</tt> file indicates the age and gender of the
+subject if known (unknown ages are recorded as 0, and ages over 89 are recorded
+as 90).  No other information is available about the subjects of these
+recordings.
+
+<p>
+Download individual files from the list below, or download the entire
+dataset as a tarball (<a href="../set-b.tar.gz">set-b.tar.gz</a>,
+about 51 MB).  See the <a href="/faq.shtml#tar-gz">FAQ</a> if you are
+not familiar with unpacking tarballs.
+
+<p>
+For additional information, see the <a href="/challenge/2011/">Challenge
+2011 home page</a>.

@@ -245,3 +245,5 @@ class EarlyStoppingWithBestModel(keras.callbacks.Callback):
         if self.stopped_epoch > 0:
             print(f"\n早停：在第 {self.stopped_epoch + 1} 轮停止训练")
 
+
+

@@ -5,7 +5,7 @@
 
 import numpy as np
 from scipy import signal as scipy_signal
-from scipy.stats import kurtosis, skewness
+from scipy.stats import kurtosis, skew
 
 
 def calculate_snr(ecg_signal):
@@ -118,7 +118,7 @@ def calculate_statistical_features(ecg_signal):
         'mean': np.mean(ecg_signal),
         'std': np.std(ecg_signal),
         'kurtosis': kurtosis(ecg_signal),
-        'skewness': skewness(ecg_signal),
+        'skewness': skew(ecg_signal),  # 使用skew而不是skewness
         'range': np.ptp(ecg_signal),  # peak-to-peak
     }
     return features

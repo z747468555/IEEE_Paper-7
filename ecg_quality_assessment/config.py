@@ -47,7 +47,7 @@ DATA_PATHS = {
     'mitdb': './data/raw/mitdb',
     'ptbdb': './data/raw/ptbdb',
     'incart': './data/raw/incartdb/files',
-    'pccc2011': './data/raw/challenge-2011',
+    'pccc2011': './data/raw/challenge-2011/set-b',  # 使用Set B作为测试集
     'nstdb': './data/raw/nstdb',
 }
 

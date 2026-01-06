@@ -172,6 +172,44 @@ class PCCC2011Loader(ECGDataLoader):
         
         return record_list
     
+    def load_annotation(self, record_name):
+        """
+        加载Challenge 2011的质量标注
+        标注文件格式：每行对应1秒的数据，包含12导联的质量评分
+        质量评分：-128表示不可接受，其他值表示可接受
+        
+        Args:
+            record_name: 记录名称
+        
+        Returns:
+            quality_labels: 每秒的质量标签列表，0=可接受，1=不可接受
+        """
+        annotation_file = os.path.join(self.database_path, f"{record_name}.txt")
+        quality_labels = []
+        
+        try:
+            with open(annotation_file, 'r') as f:
+                for line in f:
+                    # 解析每一行（逗号分隔的12导联质量评分）
+                    values = line.strip().split(',')
+                    if len(values) >= 2:
+                        # 取第一个值（时间戳）后的导联评分
+                        # 如果任何导联的质量评分不是-128，则认为是可接受的
+                        lead_scores = [int(v) for v in values[1:] if v.strip()]
+                        
+                        # 如果所有导联都是异常值（接近-128或绝对值很大），标记为不可接受
+                        # 否则标记为可接受
+                        is_unacceptable = all(abs(score) > 50 for score in lead_scores)
+                        quality_labels.append(1 if is_unacceptable else 0)
+        except FileNotFoundError:
+            print(f"警告：未找到标注文件 {annotation_file}，跳过此记录")
+            return None
+        except Exception as e:
+            print(f"警告：解析标注文件 {annotation_file} 失败: {e}")
+            return None
+        
+        return quality_labels
+    
     def load_all_records(self):
         """加载所有Challenge 2011记录"""
         records = {}
@@ -182,6 +220,32 @@ class PCCC2011Loader(ECGDataLoader):
                 signal, fields = self.load_record(record_name)
                 fs = fields['fs']
                 records[record_name] = (signal, fs)
+            except Exception as e:
+                print(f"加载记录 {record_name} 失败: {e}")
+        
+        return records
+    
+    def load_all_records_with_labels(self):
+        """
+        加载所有Challenge 2011记录及其真实标注
+        
+        Returns:
+            records: 字典，键为记录名，值为(signal, fs, quality_labels)元组
+        """
+        records = {}
+        print("正在加载PhysioNet Challenge 2011数据库（带真实标注）...")
+        
+        for record_name in tqdm(self.get_record_list()):
+            try:
+                # 加载信号
+                signal, fields = self.load_record(record_name)
+                fs = fields['fs']
+                
+                # 加载标注
+                quality_labels = self.load_annotation(record_name)
+                
+                if quality_labels is not None:
+                    records[record_name] = (signal, fs, quality_labels)
             except Exception as e:
                 print(f"加载记录 {record_name} 失败: {e}")
         
@@ -241,6 +305,11 @@ def create_data_loaders():
     }
     
     return loaders
+
+
+
+
+
 
 
 

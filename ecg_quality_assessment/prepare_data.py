@@ -14,6 +14,7 @@ from config import (
 from utils.data_loader import create_data_loaders
 from utils.signal_processing import preprocess_and_segment
 from utils.noise_generator import NoiseGenerator
+from utils.signal_quality_indices import auto_label_incart_quality
 
 
 def check_data_availability():
@@ -156,54 +157,96 @@ def load_test_databases():
                                                  return_derivative=False)
                 incart_segments.extend(segments)
         
-        # 注意：这里需要真实的质量标注
-        # 简化起见，我们假设一半是干净的，一半是含噪的
-        # 实际应用中应该使用真实标注
-        print("警告：INCART数据库使用模拟标签，实际应使用真实质量标注")
+        # 使用SQI算法自动标注质量（不再使用模拟标签）
+        print("使用信号质量指标（SQI）自动标注INCART数据...")
         
-        half = len(incart_segments) // 2
         X_incart = np.array(incart_segments)
-        y_incart = np.array([LABEL_CLEAN] * half + [LABEL_NOISY] * (len(incart_segments) - half))
+        y_incart, sqi_results = auto_label_incart_quality(X_incart, fs=360, verbose=True)
         
         test_data['incart'] = (X_incart, y_incart)
-        print(f"INCART: {len(incart_segments)} 个信号片段")
+        
+        # 保存SQI评估详情（可选）
+        import json
+        sqi_summary_path = os.path.join(OUTPUT_PATHS['processed_data'], 
+                                        'incart_sqi_summary.json')
+        os.makedirs(OUTPUT_PATHS['processed_data'], exist_ok=True)
+        
+        # 保存统计摘要
+        sqi_summary = {
+            'total_segments': int(len(y_incart)),
+            'acceptable': int(np.sum(y_incart == LABEL_CLEAN)),
+            'unacceptable': int(np.sum(y_incart == LABEL_NOISY)),
+            'acceptable_percentage': float(np.sum(y_incart == LABEL_CLEAN) / len(y_incart) * 100),
+        }
+        
+        with open(sqi_summary_path, 'w', encoding='utf-8') as f:
+            json.dump(sqi_summary, f, indent=2, ensure_ascii=False)
+        
+        print(f"\nSQI评估摘要已保存到: {sqi_summary_path}")
     
-    # 加载PCCC2011数据库
+    # 加载PCCC2011数据库（使用真实标注）
     if os.path.exists(DATA_PATHS['pccc2011']):
         print("\n" + "="*60)
-        print("处理PhysioNet Challenge 2011数据库...")
+        print("处理PhysioNet Challenge 2011数据库（Set B，使用真实标注）...")
         print("="*60)
         
-        pccc_records = loaders['pccc2011'].load_all_records()
+        pccc_records = loaders['pccc2011'].load_all_records_with_labels()
         pccc_segments = []
+        pccc_labels = []
         
-        for record_name, (signals, fs) in tqdm(pccc_records.items(), 
-                                              desc="PCCC2011"):
+        for record_name, (signals, fs, quality_labels) in tqdm(pccc_records.items(), 
+                                                               desc="PCCC2011"):
+            # Challenge 2011的记录是10秒长，每秒有一个质量标签
+            # 我们需要将其分割为5秒片段，并为每个片段分配标签
+            
             # 处理所有导联
             if len(signals.shape) == 1:
-                segments = preprocess_and_segment(signals, fs, 
-                                                 return_derivative=False)
-                pccc_segments.extend(segments)
+                # 单导联
+                segments = preprocess_and_segment(signals, fs, return_derivative=False)
+                
+                # 为每个5秒片段分配标签
+                # 如果5秒内有任何1秒被标记为不可接受，则整个片段标记为不可接受
+                for seg_idx, segment in enumerate(segments):
+                    # 计算这个片段对应的时间范围（秒）
+                    start_sec = seg_idx * 5
+                    end_sec = start_sec + 5
+                    
+                    # 获取这个时间范围内的质量标签
+                    relevant_labels = quality_labels[start_sec:end_sec]
+                    
+                    # 如果有任何不可接受的标签，整个片段标记为不可接受
+                    segment_label = LABEL_NOISY if (1 in relevant_labels) else LABEL_CLEAN
+                    
+                    pccc_segments.append(segment)
+                    pccc_labels.append(segment_label)
             else:
+                # 多导联
                 for lead_idx in range(signals.shape[1]):
                     lead_signal = signals[:, lead_idx]
                     segments = preprocess_and_segment(lead_signal, fs, 
                                                      return_derivative=False)
-                    pccc_segments.extend(segments)
-        
-        # 同样需要真实标注
-        print("警告：PCCC2011数据库使用模拟标签，实际应使用真实质量标注")
-        
-        # 根据论文，PCCC2011有18,550条干净和2,628条含噪
-        # 这里简化处理
-        n_clean = int(len(pccc_segments) * 0.876)  # 约87.6%干净
-        n_noisy = len(pccc_segments) - n_clean
+                    
+                    # 为每个片段分配标签（同上）
+                    for seg_idx, segment in enumerate(segments):
+                        start_sec = seg_idx * 5
+                        end_sec = start_sec + 5
+                        relevant_labels = quality_labels[start_sec:end_sec]
+                        segment_label = LABEL_NOISY if (1 in relevant_labels) else LABEL_CLEAN
+                        
+                        pccc_segments.append(segment)
+                        pccc_labels.append(segment_label)
         
         X_pccc = np.array(pccc_segments)
-        y_pccc = np.array([LABEL_CLEAN] * n_clean + [LABEL_NOISY] * n_noisy)
+        y_pccc = np.array(pccc_labels)
+        
+        # 统计信息
+        n_clean = np.sum(y_pccc == LABEL_CLEAN)
+        n_noisy = np.sum(y_pccc == LABEL_NOISY)
         
         test_data['pccc2011'] = (X_pccc, y_pccc)
         print(f"PCCC2011: {len(pccc_segments)} 个信号片段")
+        print(f"  - 可接受（干净）: {n_clean} ({n_clean/len(pccc_segments)*100:.1f}%)")
+        print(f"  - 不可接受（含噪）: {n_noisy} ({n_noisy/len(pccc_segments)*100:.1f}%)")
     
     return test_data
 
@@ -359,6 +402,11 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
 
 
 

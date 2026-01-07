@@ -10,24 +10,14 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
-import platform
 
-# 配置matplotlib中文字体显示
-def setup_chinese_font():
-    """配置matplotlib以正确显示中文"""
-    system = platform.system()
-    
-    if system == 'Windows':
-        plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi']
-    elif system == 'Darwin':  # macOS
-        plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'PingFang SC', 'Heiti SC']
-    else:  # Linux
-        plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Droid Sans Fallback', 'DejaVu Sans']
-    
-    plt.rcParams['axes.unicode_minus'] = False
-    print("已配置中文字体显示")
-
-setup_chinese_font()
+# 配置matplotlib使用默认样式（适合英文论文）
+plt.rcParams['font.family'] = 'DejaVu Sans'
+plt.rcParams['font.size'] = 10
+plt.rcParams['axes.labelsize'] = 12
+plt.rcParams['axes.titlesize'] = 14
+plt.rcParams['legend.fontsize'] = 10
+plt.rcParams['figure.dpi'] = 100
 
 from config import (
     TRAINING_CONFIG, OUTPUT_PATHS, TRAIN_TEST_SPLIT,
@@ -145,46 +135,46 @@ def plot_training_history(history, save_path):
     fig, axes = plt.subplots(2, 2, figsize=(15, 10))
     
     # 损失曲线
-    axes[0, 0].plot(history.history['loss'], label='训练损失')
-    axes[0, 0].plot(history.history['val_loss'], label='验证损失')
-    axes[0, 0].set_title('损失曲线')
-    axes[0, 0].set_xlabel('轮次')
-    axes[0, 0].set_ylabel('损失')
-    axes[0, 0].legend()
-    axes[0, 0].grid(True)
+    axes[0, 0].plot(history.history['loss'], label='Training Loss', linewidth=2)
+    axes[0, 0].plot(history.history['val_loss'], label='Validation Loss', linewidth=2)
+    axes[0, 0].set_title('Loss Curves', fontsize=14, fontweight='bold')
+    axes[0, 0].set_xlabel('Epoch', fontsize=12)
+    axes[0, 0].set_ylabel('Loss', fontsize=12)
+    axes[0, 0].legend(fontsize=10)
+    axes[0, 0].grid(True, alpha=0.3)
     
     # 准确率曲线
-    axes[0, 1].plot(history.history['accuracy'], label='训练准确率')
-    axes[0, 1].plot(history.history['val_accuracy'], label='验证准确率')
-    axes[0, 1].set_title('准确率曲线')
-    axes[0, 1].set_xlabel('轮次')
-    axes[0, 1].set_ylabel('准确率')
-    axes[0, 1].legend()
-    axes[0, 1].grid(True)
+    axes[0, 1].plot(history.history['accuracy'], label='Training Accuracy', linewidth=2)
+    axes[0, 1].plot(history.history['val_accuracy'], label='Validation Accuracy', linewidth=2)
+    axes[0, 1].set_title('Accuracy Curves', fontsize=14, fontweight='bold')
+    axes[0, 1].set_xlabel('Epoch', fontsize=12)
+    axes[0, 1].set_ylabel('Accuracy', fontsize=12)
+    axes[0, 1].legend(fontsize=10)
+    axes[0, 1].grid(True, alpha=0.3)
     
     # 精确率曲线
-    axes[1, 0].plot(history.history['precision'], label='训练精确率')
-    axes[1, 0].plot(history.history['val_precision'], label='验证精确率')
-    axes[1, 0].set_title('精确率曲线')
-    axes[1, 0].set_xlabel('轮次')
-    axes[1, 0].set_ylabel('精确率')
-    axes[1, 0].legend()
-    axes[1, 0].grid(True)
+    axes[1, 0].plot(history.history['precision'], label='Training Precision', linewidth=2)
+    axes[1, 0].plot(history.history['val_precision'], label='Validation Precision', linewidth=2)
+    axes[1, 0].set_title('Precision Curves', fontsize=14, fontweight='bold')
+    axes[1, 0].set_xlabel('Epoch', fontsize=12)
+    axes[1, 0].set_ylabel('Precision', fontsize=12)
+    axes[1, 0].legend(fontsize=10)
+    axes[1, 0].grid(True, alpha=0.3)
     
     # 召回率曲线
-    axes[1, 1].plot(history.history['recall'], label='训练召回率')
-    axes[1, 1].plot(history.history['val_recall'], label='验证召回率')
-    axes[1, 1].set_title('召回率曲线')
-    axes[1, 1].set_xlabel('轮次')
-    axes[1, 1].set_ylabel('召回率')
-    axes[1, 1].legend()
-    axes[1, 1].grid(True)
+    axes[1, 1].plot(history.history['recall'], label='Training Recall', linewidth=2)
+    axes[1, 1].plot(history.history['val_recall'], label='Validation Recall', linewidth=2)
+    axes[1, 1].set_title('Recall Curves', fontsize=14, fontweight='bold')
+    axes[1, 1].set_xlabel('Epoch', fontsize=12)
+    axes[1, 1].set_ylabel('Recall', fontsize=12)
+    axes[1, 1].legend(fontsize=10)
+    axes[1, 1].grid(True, alpha=0.3)
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     
-    print(f"训练历史曲线已保存到: {save_path}")
+    print(f"Training history curves saved to: {save_path}")
 
 
 def train_model(X_train, y_train, X_val, y_val, 

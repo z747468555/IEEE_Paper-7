@@ -12,28 +12,14 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
-import platform
 
-# 配置matplotlib中文字体显示
-def setup_chinese_font():
-    """配置matplotlib以正确显示中文"""
-    system = platform.system()
-    
-    if system == 'Windows':
-        # Windows系统
-        plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi']
-    elif system == 'Darwin':  # macOS
-        plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'PingFang SC', 'Heiti SC']
-    else:  # Linux
-        plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Droid Sans Fallback', 'DejaVu Sans']
-    
-    # 解决负号显示问题
-    plt.rcParams['axes.unicode_minus'] = False
-    
-    print("已配置中文字体显示")
-
-# 在导入后立即配置字体
-setup_chinese_font()
+# 配置matplotlib使用默认样式（适合英文论文）
+plt.rcParams['font.family'] = 'DejaVu Sans'
+plt.rcParams['font.size'] = 10
+plt.rcParams['axes.labelsize'] = 12
+plt.rcParams['axes.titlesize'] = 14
+plt.rcParams['legend.fontsize'] = 10
+plt.rcParams['figure.dpi'] = 100
 
 from config import OUTPUT_PATHS, LABEL_CLEAN, LABEL_NOISY
 from model.cnn_model import load_model
@@ -125,7 +111,7 @@ def print_metrics(metrics, dataset_name="测试集"):
     print("="*60 + "\n")
 
 
-def plot_confusion_matrix(cm, save_path, dataset_name="测试集"):
+def plot_confusion_matrix(cm, save_path, dataset_name="Test Set"):
     """
     绘制混淆矩阵
     
@@ -138,21 +124,21 @@ def plot_confusion_matrix(cm, save_path, dataset_name="测试集"):
     
     # 使用seaborn绘制热图
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=['干净', '含噪'],
-                yticklabels=['干净', '含噪'])
+                xticklabels=['Clean', 'Noisy'],
+                yticklabels=['Clean', 'Noisy'])
     
-    plt.title(f'{dataset_name} - 混淆矩阵')
-    plt.ylabel('真实标签')
-    plt.xlabel('预测标签')
+    plt.title(f'{dataset_name} - Confusion Matrix', fontsize=14, fontweight='bold')
+    plt.ylabel('True Label', fontsize=12)
+    plt.xlabel('Predicted Label', fontsize=12)
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     
-    print(f"混淆矩阵已保存到: {save_path}")
+    print(f"Confusion matrix saved to: {save_path}")
 
 
-def plot_roc_curve(y_true, y_pred_proba, save_path, dataset_name="测试集"):
+def plot_roc_curve(y_true, y_pred_proba, save_path, dataset_name="Test Set"):
     """
     绘制ROC曲线
     
@@ -169,23 +155,23 @@ def plot_roc_curve(y_true, y_pred_proba, save_path, dataset_name="测试集"):
     # 绘制
     plt.figure(figsize=(8, 6))
     plt.plot(fpr, tpr, color='darkorange', lw=2, 
-             label=f'ROC曲线 (AUC = {roc_auc:.4f})')
+             label=f'ROC Curve (AUC = {roc_auc:.4f})')
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', 
-             label='随机猜测')
+             label='Random Guess')
     
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('假阳性率 (False Positive Rate)')
-    plt.ylabel('真阳性率 (True Positive Rate)')
-    plt.title(f'{dataset_name} - ROC曲线')
-    plt.legend(loc="lower right")
+    plt.xlabel('False Positive Rate', fontsize=12)
+    plt.ylabel('True Positive Rate', fontsize=12)
+    plt.title(f'{dataset_name} - ROC Curve', fontsize=14, fontweight='bold')
+    plt.legend(loc="lower right", fontsize=10)
     plt.grid(True, alpha=0.3)
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     
-    print(f"ROC曲线已保存到: {save_path}")
+    print(f"ROC curve saved to: {save_path}")
 
 
 def evaluate_model(model, X_test, y_test, dataset_name="测试集", 
@@ -240,21 +226,21 @@ def evaluate_model(model, X_test, y_test, dataset_name="测试集",
         
         # 保存详细报告
         report = classification_report(y_test, y_pred, 
-                                      target_names=['干净', '含噪'])
+                                      target_names=['Clean', 'Noisy'])
         report_path = os.path.join(results_dir, 
                                    f'classification_report_{dataset_name}.txt')
         with open(report_path, 'w', encoding='utf-8') as f:
-            f.write(f"{dataset_name} 分类报告\n")
+            f.write(f"{dataset_name} Classification Report\n")
             f.write("="*60 + "\n")
             f.write(report)
-            f.write("\n\n详细指标:\n")
-            f.write(f"准确率 (Accuracy):     {metrics['accuracy']*100:.2f}%\n")
-            f.write(f"敏感度 (Sensitivity):  {metrics['sensitivity']*100:.2f}%\n")
-            f.write(f"特异度 (Specificity):  {metrics['specificity']*100:.2f}%\n")
-            f.write(f"精确率 (Precision):    {metrics['precision']*100:.2f}%\n")
-            f.write(f"F1分数:                {metrics['f1_score']:.4f}\n")
+            f.write("\n\nDetailed Metrics:\n")
+            f.write(f"Accuracy:      {metrics['accuracy']*100:.2f}%\n")
+            f.write(f"Sensitivity:   {metrics['sensitivity']*100:.2f}%\n")
+            f.write(f"Specificity:   {metrics['specificity']*100:.2f}%\n")
+            f.write(f"Precision:     {metrics['precision']*100:.2f}%\n")
+            f.write(f"F1-Score:      {metrics['f1_score']:.4f}\n")
         
-        print(f"评估报告已保存到: {report_path}")
+        print(f"Evaluation report saved to: {report_path}")
     
     return metrics
 

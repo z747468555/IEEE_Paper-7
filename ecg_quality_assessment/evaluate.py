@@ -12,6 +12,28 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
+import platform
+
+# 配置matplotlib中文字体显示
+def setup_chinese_font():
+    """配置matplotlib以正确显示中文"""
+    system = platform.system()
+    
+    if system == 'Windows':
+        # Windows系统
+        plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi']
+    elif system == 'Darwin':  # macOS
+        plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'PingFang SC', 'Heiti SC']
+    else:  # Linux
+        plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Droid Sans Fallback', 'DejaVu Sans']
+    
+    # 解决负号显示问题
+    plt.rcParams['axes.unicode_minus'] = False
+    
+    print("已配置中文字体显示")
+
+# 在导入后立即配置字体
+setup_chinese_font()
 
 from config import OUTPUT_PATHS, LABEL_CLEAN, LABEL_NOISY
 from model.cnn_model import load_model
@@ -278,6 +300,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
 
 
 

@@ -10,6 +10,24 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
+import platform
+
+# 配置matplotlib中文字体显示
+def setup_chinese_font():
+    """配置matplotlib以正确显示中文"""
+    system = platform.system()
+    
+    if system == 'Windows':
+        plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi']
+    elif system == 'Darwin':  # macOS
+        plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'PingFang SC', 'Heiti SC']
+    else:  # Linux
+        plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'Droid Sans Fallback', 'DejaVu Sans']
+    
+    plt.rcParams['axes.unicode_minus'] = False
+    print("已配置中文字体显示")
+
+setup_chinese_font()
 
 from config import (
     TRAINING_CONFIG, OUTPUT_PATHS, TRAIN_TEST_SPLIT,
@@ -305,6 +323,8 @@ if __name__ == '__main__':
             print(f"GPU配置错误: {e}")
     
     main()
+
+
 
 
 
